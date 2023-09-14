@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Update system packages
-sudo apt update
-
-# Sleep for 30 seconds
-sleep 30
 
 # Install Node.js
 sudo apt-get update
