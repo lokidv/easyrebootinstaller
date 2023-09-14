@@ -28,7 +28,7 @@ sleep 5
 
 # Sleep for 30 seconds
 
-
+cd
 # Create a directory for the Node.js app
 mkdir server-reboot-app
 sleep 2
@@ -109,7 +109,7 @@ app.listen(port, () => {
 EOF
 
 # Sleep for 30 seconds
-sleep 10
+sleep 7
 
 # Create the public directory and index.html file
 mkdir public
@@ -172,7 +172,7 @@ cat <<EOF > public/index.html
 </html>
 EOF
 # Sleep for 30 seconds
-sleep 30
+sleep 7
 
 # Create a systemd service for the Node.js app
 cat <<EOF | sudo tee /etc/systemd/system/removeui.service
@@ -191,7 +191,7 @@ cat <<EOF | sudo tee /etc/systemd/system/removeui.service
 EOF
 
 # Sleep for 30 seconds
-sleep 10
+sleep 7
 
 # Enable and start the systemd service
 sudo systemctl enable removeui.service
