@@ -101,10 +101,11 @@ app.post('/enable-ip-forwarding', (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+
 EOF
 
 # Sleep for 30 seconds
-sleep 7
+sleep 13
 
 # Create the public directory and index.html file
 mkdir public
@@ -169,9 +170,6 @@ const serverHost = window.location.hostname;
 console.log(serverHost); // It gives the domain name or IP from which the page was served.
 let isp = serverHost;
 
-
-
-
 function fetchDataFunction() {
     const serverURL = `http://${isp}:3000/list`;
 
@@ -201,7 +199,6 @@ function fetchDataFunction() {
             console.error('There was an error:', error);
         });
 }
-
 
   function removeNameFunction() {
             const removeNameInput = document.getElementById('removeName').value;
@@ -247,10 +244,6 @@ document.getElementById('nameForm').addEventListener('submit', function(e) {
         });
 });
 
-
-
-
-
     document.getElementById('rebootButton').addEventListener('click', () => {
       const apiKey = document.getElementById('apiKeyInput').value;
       // Send a request to trigger the reboot with the entered API key
@@ -293,9 +286,10 @@ document.getElementById('nameForm').addEventListener('submit', function(e) {
   </script>
 </body>
 </html>
+
 EOF
-# Sleep for 30 seconds
-sleep 7
+# Sleep for 15 seconds
+sleep 15
 
 # Create a systemd service for the Node.js app
 cat <<EOF | sudo tee /etc/systemd/system/removeui.service
