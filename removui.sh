@@ -19,7 +19,7 @@ echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.co
 sleep 5
 sudo apt-get update
 sudo apt install -y nodejs
-sleep 5
+sleep 7
 
 # Sleep for 30 seconds
 
@@ -33,7 +33,7 @@ sleep 2
 npm init -y
 sleep 6
 npm install express child_process
-sleep 7
+sleep 9
 
 # Sleep for 30 seconds
 
