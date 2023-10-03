@@ -39,7 +39,7 @@ sleep 9
 
 
 # Create the app.js file
-cat <<EOF > app.js
+cat > app.js << EOF
 const express = require('express');
 const { exec } = require('child_process');
 
@@ -109,7 +109,7 @@ sleep 13
 
 # Create the public directory and index.html file
 mkdir public
-cat <<EOF > public/index.html
+cat > public/index.html << EOF
 <!DOCTYPE html>
 <html>
 <head>
