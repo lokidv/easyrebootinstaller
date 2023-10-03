@@ -39,17 +39,17 @@ sleep 9
 
 
 # Create the app.js file
-cat > app.js << EOF
+cat > app.js << 'EOF'
 const express = require('express');
 const { exec } = require('child_process');
 
 const app = express();
 const port = 3800; // You can choose any available port
 
-// Serve static files from the 'public' directory
+
 app.use(express.static('/root/server-reboot-app/public'));
 
-// Define an API key (replace with your actual API key)
+
 const apikey = 'loki';
 app.get('/', (req, res) => {
   // This can be an optional route or a redirection to your main HTML page.
@@ -80,13 +80,12 @@ app.post('/enable-ip-forwarding', (req, res) => {
   // Extract the API key from the request headers
   const requestApiKey = req.header('API-Key');
 
-  // Check if the provided API key matches the valid API key
   if (requestApiKey !== apikey) {
     res.status(403).send('Invalid API key.');
     return;
   }
 
-  // Execute the command to enable IP forwarding
+
   exec('sudo sed -i "s/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/" /etc/sysctl.d/99-sysctl.conf', (error, stdout, stderr) => {
     if (error) {
       console.error(`Error: ${error}`);
@@ -102,14 +101,12 @@ app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
+
 EOF
-
-# Sleep for 30 seconds
-sleep 13
-
-# Create the public directory and index.html file
+sleep 5
+# Create public directory and index.html
 mkdir public
-cat > public/index.html << EOF
+cat > public/index.html << 'EOF'
 <!DOCTYPE html>
 <html>
 <head>
@@ -167,8 +164,11 @@ cat > public/index.html << EOF
 
 let ips ;
 const serverHost = window.location.hostname;
-console.log(serverHost); // It gives the domain name or IP from which the page was served.
+console.log(serverHost); 
 let isp = serverHost;
+
+
+
 
 function fetchDataFunction() {
     const serverURL = `http://${isp}:3000/list`;
@@ -200,6 +200,7 @@ function fetchDataFunction() {
         });
 }
 
+
   function removeNameFunction() {
             const removeNameInput = document.getElementById('removeName').value;
             const serverURL = `http://${isp}:3000/remove?publicKey=${encodeURIComponent(removeNameInput)}`;
@@ -221,10 +222,10 @@ document.getElementById('nameForm').addEventListener('submit', function(e) {
 
     const nameInput = document.getElementById('name').value;
 
-    // Constructing the server URL
+
     const serverURL = `http://${isp}:3000/create?publicKey=${encodeURIComponent(nameInput)}`;
 
-    // Fetching the server response
+   
     fetch(serverURL)
         .then(response => response.text()) // Convert the response to text
         .then(text => {
@@ -243,6 +244,10 @@ document.getElementById('nameForm').addEventListener('submit', function(e) {
             console.error('There was an error:', error);
         });
 });
+
+
+
+
 
     document.getElementById('rebootButton').addEventListener('click', () => {
       const apiKey = document.getElementById('apiKeyInput').value;
