@@ -171,7 +171,11 @@ let isp = serverHost;
 
 
 function fetchDataFunction() {
-    const serverURL = `http://${isp}:3000/list`;
+ const apiKey = document.getElementById('apiKeyInput').value;
+if(apiKey!='loki'){
+return;
+} 
+   const serverURL = `http://${isp}:3000/list`;
 
     fetch(serverURL)
         .then(response => response.text())  // Get the raw text
@@ -202,7 +206,11 @@ function fetchDataFunction() {
 
 
   function removeNameFunction() {
-            const removeNameInput = document.getElementById('removeName').value;
+ const apiKey = document.getElementById('apiKeyInput').value;
+if(apiKey!='loki'){
+return;
+}       
+     const removeNameInput = document.getElementById('removeName').value;
             const serverURL = `http://${isp}:3000/remove?publicKey=${encodeURIComponent(removeNameInput)}`;
 
             fetch(serverURL)
@@ -219,7 +227,10 @@ function fetchDataFunction() {
 
 document.getElementById('nameForm').addEventListener('submit', function(e) {
     e.preventDefault(); // Prevents the default form submission behaviour
-
+ const apiKey = document.getElementById('apiKeyInput').value;
+if(apiKey!='loki'){
+return;
+}
     const nameInput = document.getElementById('name').value;
 
 
