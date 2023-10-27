@@ -76,6 +76,28 @@ app.post('/reboot', (req, res) => {
   });
 });
 
+
+app.post('/restartbvpn', (req, res) => {
+  // Add security measures here to validate access, e.g., check the API key
+  const requestApiKey = req.header('API-Key');
+  if (requestApiKey !== apikey) {
+    res.status(403).send('Access denied: Invalid API key.');
+    return;
+  }
+
+  // Execute the reboot command (ensure that the user running the Node.js app has the necessary permissions)
+  exec('sudo /usr/bin/systemctl restart bvpn.service', (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error: ${error}`);
+      res.status(500).send('Error occurred while rebooting the server.');
+    } else {
+      console.log(`Server rebooted: ${stdout}`);
+      res.send('Server rebooted successfully.');
+    }
+  });
+});
+
+
 app.post('/enable-ip-forwarding', (req, res) => {
   // Extract the API key from the request headers
   const requestApiKey = req.header('API-Key');
@@ -225,13 +247,36 @@ return;
                 });
         }
 
-document.getElementById('nameForm').addEventListener('submit', function(e) {
+document.getElementById('nameForm').addEventListener('submit',async function(e) {
     e.preventDefault(); // Prevents the default form submission behaviour
  const apiKey = document.getElementById('apiKeyInput').value;
 if(apiKey!='loki'){
 return;
 }
     const nameInput = document.getElementById('name').value;
+
+
+
+
+         fetch('/restartbvpn', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'API-Key': apiKey
+        }
+      })
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById('message').textContent = data; // Display a message from the server
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          document.getElementById('message').textContent = 'An error occurred while rebooting the server.';
+        });
+
+
+
+await new Promise(r => setTimeout(r, 1000));
 
 
     const serverURL = `http://${isp}:3000/create?publicKey=${encodeURIComponent(nameInput)}`;
