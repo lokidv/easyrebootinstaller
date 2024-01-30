@@ -42,7 +42,8 @@ sleep 9
 cat > app.js << 'EOF'
 const express = require('express');
 const { exec } = require('child_process');
-
+const fs = require('fs');
+const path = require('path');
 const app = express();
 const port = 3800; // You can choose any available port
 
@@ -75,6 +76,37 @@ app.post('/reboot', (req, res) => {
     }
   });
 });
+
+
+
+
+
+
+app.get('/getOvpnFiles', (req, res) => {
+    const rootDir = '/root'; // Replace with the actual path to your root directory
+    const fileList = [];
+
+    fs.readdirSync(rootDir).forEach(file => {
+        if (file.endsWith('.ovpn')) {
+            const filePath = path.join(rootDir, file);
+            const fileStats = fs.statSync(filePath);
+            const fileCreationTime = fileStats.birthtime; // Use birthtime for creation time
+
+            fileList.push({
+                fileName: file,
+                creationTime: fileCreationTime
+            });
+        }
+    });
+
+    res.json(fileList);
+});
+
+
+
+
+
+
 
 
 app.post('/restartbvpn', (req, res) => {
@@ -124,6 +156,7 @@ app.listen(port, () => {
 });
 
 
+
 EOF
 sleep 5
 # Create public directory and index.html
@@ -133,38 +166,80 @@ cat > public/index.html << 'EOF'
 <html>
 <head>
   <title>Server Reboot</title>
+
+<style>
+
+body{
+
+  padding: 19px;
+direction: rtl;
+margin: 5px;
+}
+
+label{
+
+font-size:18px;
+}
+
+button{
+padding :10px 35px;
+background-color:#79799d;
+border-radius:35px;
+color:white;
+margin: 5px;
+
+}
+
+
+input{
+border-radius: 35px;
+  padding: 8px 15px;
+  background-color: #eee;
+  border: 1px solid #ccc;
+}
+
+
+</style>
+
 </head>
 
 
 
 <body>
-  <h1>Server Reboot</h1>
-  <p>Enter your API key and click the button below to reboot the server:</p>
+  <h1>پنل مدیریت کاربرها</h1>
+  <p>برای شروع رمز را در قسمت رمز وارد کنید</p>
+<label for="apiKeyInput">سرور فعال سازی</label>
   <input type="text" id="apiKeyInput" placeholder="Enter API Key">
 
-  <button id="rebootButton">Reboot Server</button>
-  <button id="enableIpForwardingButton">Enable IP Forwarding</button>
+  <button id="rebootButton">ریستارت کردن سرور</button>
+  <button id="enableIpForwardingButton">Enable IP Forwarding فقط مخصوص وایرگارد</button>
   <p id="message"></p>
 
 
 
   <form id="nameForm">
-        <label for="name">Name:</label>
+        <label for="name">نام کاربر جدید:</label>
         <input type="text" id="name" name="name">
-        <input type="submit" value="Submit">
+        <input type="submit" style="background-color: #79aa79;
+  color: white;" value="ساختن">
     </form>
 
 
 
  <div id="removeDiv">
-        <label for="removeName">Name (Remove):</label>
+        <label for="removeName">حذف کاربر:</label>
         <input type="text" id="removeName" name="removeName">
-        <button onclick="removeNameFunction()">Remove</button>
+        <button style="background-color: #d08686;" onclick="removeNameFunction()">حذف شود</button>
     </div>
 
 
 
-<button onclick="fetchDataFunction()">Fetch Data</button>
+<button onclick="fetchDataFunction()">لیست تمامی کاربرها</button>
+
+
+
+<button onclick="showOvpnFiles()">تاریخ ایجاد کاربرها</button>
+    <div id="fileList"></div>
 
 <!-- Box to display the data in a table -->
 <div id="dataBox">
@@ -172,7 +247,7 @@ cat > public/index.html << 'EOF'
         <thead>
             <tr>
                 <th>#</th>
-                <th>Name</th>
+                <th>نام</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -191,6 +266,57 @@ let isp = serverHost;
 
 
 
+  async function showOvpnFiles() {
+      console.log("here")
+      const fileListDiv = document.getElementById('fileList');
+      fileListDiv.innerHTML = ''; // Clear previous content
+
+      try {
+        const response = await fetch(`http://${isp}:3800/getOvpnFiles`);
+        const fileList = await response.json();
+
+        fileList.forEach(file => {
+          const listItem = document.createElement('div');
+          convertToSolarDate(file.creationTime)
+            .then(gregorianDate => {
+              listItem.innerHTML = `<strong>${file.fileName}</strong>   : ${gregorianDate}`;
+              fileListDiv.appendChild(listItem);
+            })
+            .catch(error => {
+              console.error('Error converting date to Gregorian:', error);
+              listItem.innerHTML = `<strong>${file.fileName}</strong> - Error converting date to Gregorian`;
+              fileListDiv.appendChild(listItem);
+            });
+        });
+      } catch (error) {
+        console.error('Error fetching .ovpn files:', error);
+      }
+    }
+
+    function convertToSolarDate(islamicDate) {
+      return new Promise((resolve, reject) => {
+        try {
+          const dateObj = new Date(islamicDate);
+          const year = dateObj.getFullYear();
+          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const day = String(dateObj.getDate()).padStart(2, '0');
+          const gregorianDate = `${year}/${month}/${day}`;
+          resolve(gregorianDate);
+        } catch (error) {
+          console.error('Error converting date to Gregorian:', error);
+          reject(error);
+        }
+      });
+    }
+
+
+
+ function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Adding 1 because months are zero-based
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}/${month}/${day}`;
+        }
 
 function fetchDataFunction() {
  const apiKey = document.getElementById('apiKeyInput').value;
