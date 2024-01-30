@@ -40,6 +40,7 @@ sleep 9
 
 # Create the app.js file
 cat > app.js << 'EOF'
+
 const express = require('express');
 const { exec } = require('child_process');
 const fs = require('fs');
@@ -77,6 +78,152 @@ app.post('/reboot', (req, res) => {
   });
 });
 
+
+
+
+app.get('/getAllRecords', (req, res) => {
+  // Add security measures here to validate access, e.g., check the API key
+  const requestApiKey = req.header('API-Key');
+  if (requestApiKey !== apikey) {
+    res.status(403).send('Access denied: Invalid API key.');
+    return;
+  }
+
+  // Specify the path to your text file
+  const filePath = '/root/records.txt';
+
+  // Read the contents of the text file
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error(`Error reading the file: ${err}`);
+      res.status(500).send('Error reading the file.');
+      return;
+    }
+
+    // Split the file into records
+    const records = data.split('\n');
+
+    // Send the records as a JSON response
+    res.json(records);
+  });
+});
+
+
+
+
+app.get('/fetchExpirationTime', (req, res) => {
+  // Add security measures here to validate access, e.g., check the API key
+  const requestApiKey = req.header('API-Key');
+  if (requestApiKey !== apikey) {
+    res.status(403).send('Access denied: Invalid API key.');
+    return;
+  }
+
+  // Specify the path to your text file
+  const filePath = '/root/records.txt';
+
+  const requestedName = req.query.name;
+  if (!requestedName) {
+    res.status(400).send('Invalid or missing name.');
+    return;
+  }
+
+  // Read the contents of the text file
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error(`Error reading the file: ${err}`);
+      res.status(500).send('Error reading the file.');
+    } else {
+      // Split the file into records
+      const records = data.split('\n');
+
+      // Find the record with the requested name
+      const requestedRecord = records.find(record => {
+        const name = record.split('|')[0]?.trim(); // Assuming names are in the first column
+        return name === requestedName;
+      });
+
+      if (requestedRecord) {
+        // Parse the requested record and extract expiration time
+        const expirationTime = requestedRecord.split('|')[1]?.trim(); // Assuming expiration time is in the second column
+
+        if (expirationTime) {
+          console.log(`Expiration Time for ${requestedName}: ${expirationTime}`);
+          res.send(`Expiration Time for ${requestedName}: ${expirationTime}`);
+        } else {
+          console.error(`Error extracting expiration time for ${requestedName}.`);
+          res.status(500).send(`Error extracting expiration time for ${requestedName}.`);
+        }
+      } else {
+        console.log(`Name ${requestedName} not found.`);
+        res.send(`Name ${requestedName} not found.`);
+      }
+    }
+  });
+});
+
+
+
+
+
+
+
+
+app.post('/createRecord', (req, res) => {
+  // Add security measures here to validate access, e.g., check the API key
+  const requestApiKey = req.header('API-Key');
+  if (requestApiKey !== apikey) {
+    res.status(403).send('Access denied: Invalid API key.');
+    return;
+  }
+
+  // Extract data from the request parameters
+  const fileNameInput = req.query.fileName;
+  const expirationDateInput = req.query.expirationDate;
+
+  // Validate data (add more validation as needed)
+
+  // Specify the path to your text file
+  const filePath = '/root/records.txt';
+
+  // Read the contents of the text file
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error(`Error reading the file: ${err}`);
+      res.status(500).send('Error reading the file.');
+      return;
+    }
+
+    // Split the file into records
+    const records = data.split('\n');
+
+    // Remove the existing record with the given fileName
+    const updatedRecords = records.filter(record => {
+      const existingFileName = record.split('|')[0]?.trim(); // Assuming file names are in the first column
+      return existingFileName !== fileNameInput;
+    });
+
+    // Create a record with the file name and expiration date
+    const newRecord = `${fileNameInput} | Expiration Date: ${expirationDateInput}`;
+
+    // Append the new record to the updated records
+    updatedRecords.push(newRecord);
+
+    // Join the records and write them back to the file
+    const updatedData = updatedRecords.join('\n');
+    
+    // Write the updated data back to the file
+    fs.writeFile(filePath, updatedData, (writeErr) => {
+      if (writeErr) {
+        console.error(`Error writing to the file: ${writeErr}`);
+        res.status(500).send('Error writing to the file.');
+      } else {
+        console.log('Record added/updated successfully.');
+        res.send('Record added/updated successfully.');
+      }
+    });
+  });
+});
 
 
 
@@ -226,6 +373,24 @@ border-radius: 35px;
 
 
 
+<label for="fileName"> نام کاربر </label>
+<input type="text" id="fileName" name="fileName">
+
+<label for="expirationDate">تاریخ انقضا</label>
+<input type="date" id="expirationDate" name="expirationDate">
+
+<input type="submit" style="background-color: #79aa79; color: white;" value="ذخیره" onclick="createRecord()">
+
+
+
+<button style="background-color: #79aa79; color: white;" onclick="fetchExpirationTime()">نمایش زمان انقضاء</button>
+<p id="expirationTime"></p>
+
+<button onclick="showAllRecords()">لیست تاریخ انقضا </button>
+<div id="allRecords"></div>
+
+
+
  <div id="removeDiv">
         <label for="removeName">حذف کاربر:</label>
         <input type="text" id="removeName" name="removeName">
@@ -263,6 +428,101 @@ let ips ;
 const serverHost = window.location.hostname;
 console.log(serverHost); 
 let isp = serverHost;
+
+
+
+
+
+function showAllRecords() {
+  const apiKey = document.getElementById('apiKeyInput').value;
+  if (apiKey !== 'loki') {
+    return;
+  }
+
+  // Fetch all records
+  fetch('/getAllRecords', {
+    headers: {
+      'API-Key': apiKey
+    }
+  })
+    .then(response => response.json())
+    .then(records => {
+      const recordsDiv = document.getElementById('allRecords');
+      recordsDiv.innerHTML = '<strong>All Records:</strong><br>';
+      
+      records.forEach(record => {
+        recordsDiv.innerHTML += `${record}<br>`;
+      });
+    })
+    .catch(error => {
+      console.error('Error fetching records:', error);
+    });
+}
+
+
+
+
+ function fetchExpirationTime() {
+    // Call the server-side function to fetch expiration time
+ const nameInput = prompt('نام کاربری که تاریخ انقضا ان را میخواهید وارد کنید:'); // Prompt for the name
+
+    if (!nameInput) {
+      // User clicked cancel or entered an empty name
+      return;
+    }
+
+  fetch(`/fetchExpirationTime?name=${encodeURIComponent(nameInput)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'API-Key': 'loki', // Replace with your actual API key
+      },
+    })
+      .then(response => response.text())
+      .then(data => {
+        console.log(data); // Log the response from the server
+        document.getElementById('expirationTime').textContent = data; // Display the expiration time
+      })
+      .catch(error => {
+        console.error('Error fetching expiration time:', error);
+        // Handle the error, display an error message, etc.
+      });
+
+  }
+
+
+
+
+
+
+  function createRecord() {
+    const fileNameInput = document.getElementById('fileName').value;
+    const expirationDateInput = document.getElementById('expirationDate').value;
+
+    // Call the server-side function to create a record
+    fetch(`/createRecord?fileName=${encodeURIComponent(fileNameInput)}&expirationDate=${encodeURIComponent(expirationDateInput)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'API-Key': 'loki', // Replace with your actual API key
+      },
+    })
+      .then(response => response.text())
+      .then(data => {
+        console.log(data); // Log the response from the server
+        // Optionally, display a message to the user
+      })
+      .catch(error => {
+        console.error('Error creating record:', error);
+        // Handle the error, display an error message, etc.
+      });
+  }
+
+
+
+
+
+
 
 
 
